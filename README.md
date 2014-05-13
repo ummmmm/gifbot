@@ -1,2 +1,1 @@
-gifbot
-======
+Reddit GIF_Link_BOT
