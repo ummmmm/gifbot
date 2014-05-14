@@ -164,6 +164,7 @@ class GIFBot:
 				print "[NO POST] Already commented on this submission"
 				continue
 
+			authors		= set()
 			matches 	= []
 			total		= 0
 			submission 	= self._r.get_submission( submission_id = submission_id, comment_limit = None, comment_sort = 'top' )
@@ -185,11 +186,16 @@ class GIFBot:
 				gifs_count, gifs = self.find_gifs( comment.body )
 
 				if gifs_count:
+					authors.add( comment.author.name )
 					total += gifs_count
 					matches.append( { 'gifs' : gifs, 'author': comment.author.name, 'permalink': comment.permalink, 'score': comment.score } )
 
 			if total < int( self._config_reddit[ 'minimum_gifs' ] ):
 				print "[NO POST] Submission has {0} animated GIFS" . format( total )
+				continue
+
+			if len( authors ) < int( self._config_reddit[ 'minimum_commenters' ] ):
+				print "[NO POST] Submission has only {0} unique commenters" .format( len( authors ) )
 				continue
 
 			matches = sorted( matches, key = lambda k: k[ 'score' ], reverse = True )
