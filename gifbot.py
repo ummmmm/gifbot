@@ -116,6 +116,7 @@ class GIFBot:
 		gifs = []
 
 		for text, url in self._href_pattern.findall( body ):
+			url 		= url.replace( '&amp;', '&' )
 			parsed_url	= urlparse.urlparse( url )
 			domain		= parsed_url.netloc.lower()
 			path		= parsed_url.path
