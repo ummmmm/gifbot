@@ -1,0 +1,10 @@
+[Reddit]
+username: test 
+password: test123
+minimum_comment_score: 2
+minimum_comments: 100
+maximum_comments: 1000
+minimum_gifs: 3
+
+[Imgur]
+client_id: d83j3j27x74h473
