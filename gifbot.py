@@ -25,12 +25,12 @@ class GIFBot:
 		self._config_imgur			= self._config.section( 'Imgur' )
 
 		self._r.login( self._config_reddit[ 'username' ], self._config_reddit[ 'password' ] )
-		
-		self._commented_posts 		= self.get_commented_submission_ids()
-		self._banned_subreddits		= self.get_banned_subreddits()
 
 	def begin( self ):
 		try:
+			self._commented_posts 		= self.get_commented_submission_ids()
+			self._banned_subreddits		= self.get_banned_subreddits()
+
 			while True:
 				all_comments 	= self._r.get_comments( 'all', limit = None )
 				submission_ids 	= self.find_submission_ids( all_comments )
@@ -84,7 +84,7 @@ class GIFBot:
 			request 	= urllib2.Request( url, headers = { 'User-Agent:' : self._browser_user_agent } )
 			response	= urllib2.urlopen( request, None, 10 )
 					
-			if response.info().getheader( 'Content-Type' ) == 'image/gif' and self._frames_pattern.findall( response.read() ) > 1:
+			if response.info().getheader( 'Content-Type' ) == 'image/gif' and len( self._frames_pattern.findall( response.read() ) ) > 1:
 				self._gif_cache[ url ] = True
 			else:
 				self._gif_cache[ url ] = False
@@ -130,13 +130,13 @@ class GIFBot:
 		return len( gifs ), gifs
 
 	def find_submission_ids( self, comments ):
-		submission_ids = []
+		submission_ids = set()
 
 		for comment in comments:
 			gifs_count, gifs = self.find_gifs( comment.body )
 
 			if gifs_count:
-				submission_ids.append( comment.submission.id )
+				submission_ids.add( comment.submission.id )
 
 		return submission_ids
 
