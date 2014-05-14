@@ -1,1 +1,1 @@
-Reddit GIF_Link_BOT
+Reddit GIF_Link_Bot
