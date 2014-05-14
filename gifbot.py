@@ -21,10 +21,8 @@ class GIFBot:
 		self._frames_pattern		= re.compile( '\x00\x21\xF9\x04' )
 		self._r						= praw.Reddit( user_agent = self._user_agent )
 		self._config				= Config()
-		self._config_reddit			= self._config.section( 'Reddit' )
-		self._config_imgur			= self._config.section( 'Imgur' )
 
-		self._r.login( self._config_reddit[ 'username' ], self._config_reddit[ 'password' ] )
+		self._r.login( self._config._reddit[ 'username' ], self._config._reddit[ 'password' ] )
 
 	def begin( self ):
 		try:
@@ -76,7 +74,7 @@ class GIFBot:
 		if self._gif_cache.has_key( url ):
 			return self._gif_cache[ url ]
 
-		if domain.endswith( 'imgur.com' ) and self._config_imgur[ 'client_id' ]:
+		if domain.endswith( 'imgur.com' ) and self._config._imgur[ 'client_id' ]:
 			self._gif_cache[ url ] = self.is_imgur_animated( path )
 			return self._gif_cache[ url ]
 
@@ -101,7 +99,7 @@ class GIFBot:
 
 		try:
 			request 	= urllib2.Request( 'https://api.imgur.com/3/image/{0}' . format( name_object.group( 1 ) ) )
-			request.add_header( 'Authorization', 'Client-ID {0}' . format( self._config_imgur[ 'client_id' ] ) )
+			request.add_header( 'Authorization', 'Client-ID {0}' . format( self._config._imgur[ 'client_id' ] ) )
 			response	= urllib2.urlopen( request, None, 10 )
 			image		= json.loads( response.read() )
 
@@ -173,14 +171,14 @@ class GIFBot:
 				print '[NO POST] Banned from subreddit "{0}"' . format( submission.subreddit.display_name )
 				continue
 
-			if submission.num_comments < int( self._config_reddit[ 'minimum_comments' ] ) or submission.num_comments > int( self._config_reddit[ 'maximum_comments' ] ):
+			if submission.num_comments < self._config._reddit[ 'minimum_comments' ] or submission.num_comments > self._config._reddit[ 'maximum_comments' ]:
 				print '[NO POST] Submission has {0} comments' . format( submission.num_comments )
 				continue
 
 			submission.replace_more_comments( limit = None, threshold = 0 )
 
 			for comment in praw.helpers.flatten_tree( submission.comments ):
-				if comment.score < int( self._config_reddit[ 'minimum_comment_score' ] ):
+				if comment.score < self._config._reddit[ 'minimum_comment_score' ]:
 					continue
 
 				gifs_count, gifs = self.find_gifs( comment.body )
@@ -190,11 +188,11 @@ class GIFBot:
 					total += gifs_count
 					matches.append( { 'gifs' : gifs, 'author': comment.author.name, 'permalink': comment.permalink, 'score': comment.score } )
 
-			if total < int( self._config_reddit[ 'minimum_gifs' ] ):
+			if total < self._config._reddit[ 'minimum_gifs' ]:
 				print "[NO POST] Submission has {0} animated GIFS" . format( total )
 				continue
 
-			if len( authors ) < int( self._config_reddit[ 'minimum_commenters' ] ):
+			if len( authors ) < self._config._reddit[ 'minimum_commenters' ]:
 				print "[NO POST] Submission has only {0} unique commenters" .format( len( authors ) )
 				continue
 
@@ -208,13 +206,16 @@ class GIFBot:
 
 class Config:
 	def __init__( self ):
-		self._config = ConfigParser.RawConfigParser()
+		self._imgur 	= {}
+		self._reddit 	= {}
+		self._config 	= ConfigParser.RawConfigParser()
 		self._config.read( 'settings.ini' )
 
-	def section( self, section ):
-		dict = {}
-
-		for option in self._config.options( section ):
-			dict[ option ] = self._config.get( section, option )
-
-		return dict
+		self._imgur[ 'client_id' ] 				= self._config.get( 'Imgur', 'client_id' )
+		self._reddit[ 'username' ] 				= self._config.get( 'Reddit', 'username' )
+		self._reddit[ 'password' ] 				= self._config.get( 'Reddit', 'password' )
+		self._reddit[ 'minimum_comment_score' ] = self._config.getint( 'Reddit', 'minimum_comment_score' )
+		self._reddit[ 'minimum_comments' ] 		= self._config.getint( 'Reddit', 'minimum_comments' )
+		self._reddit[ 'maximum_comments' ] 		= self._config.getint( 'Reddit', 'maximum_comments' )
+		self._reddit[ 'minimum_gifs' ] 			= self._config.getint( 'Reddit', 'minimum_gifs' )
+		self._reddit[ 'minimum_commenters' ] 	= self._config.getint( 'Reddit', 'minimum_commenters' )
