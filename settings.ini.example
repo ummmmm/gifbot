@@ -1,4 +1,5 @@
 [Reddit]
+user_agent: [bot username] reddit bot by /u/[reddit username]
 username: test 
 password: test123
 minimum_comment_score: 2

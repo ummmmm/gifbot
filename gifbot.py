@@ -7,6 +7,7 @@ import re
 import urlparse
 import urllib2
 import ConfigParser
+import os
 
 class GIFBot:
 	def __init__( self ):
@@ -14,13 +15,12 @@ class GIFBot:
 		self._commented_posts		= set()
 		self._banned_subreddits		= set()
 		self._blacklisted_domains	= ( 'reddit.com', 'wikipedia.org' )
-		self._user_agent			= 'GIF_Link_Bot reddit bot by /u/ummmmm'
 		self._browser_user_agent	= 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36'
 		self._imgur_pattern 		= re.compile( '/(\w{5,})' )
 		self._href_pattern			= re.compile( '\[([^\[]+)\]\(([^\)]+)\)' )
 		self._frames_pattern		= re.compile( '\x00\x21\xF9\x04' )
-		self._r						= praw.Reddit( user_agent = self._user_agent )
 		self._config				= Config()
+		self._r						= praw.Reddit( user_agent = self._config._reddit[ 'user_agent' ] )
 
 		self._r.login( self._config._reddit[ 'username' ], self._config._reddit[ 'password' ] )
 
@@ -197,9 +197,13 @@ class Config:
 		self._imgur 	= {}
 		self._reddit 	= {}
 		self._config 	= ConfigParser.RawConfigParser()
-		self._config.read( 'settings.ini' )
+
+		config_file = os.path.abspath( os.path.dirname( sys.argv[ 0 ] ) )
+		config_file = os.path.join( config_file, 'settings.ini' )
+		self._config.read( config_file )
 
 		self._imgur[ 'client_id' ] 				= self._config.get( 'Imgur', 'client_id' )
+		self._reddit[ 'user_agent' ]			= self._config.get( 'Reddit', 'user_agent' )
 		self._reddit[ 'username' ] 				= self._config.get( 'Reddit', 'username' )
 		self._reddit[ 'password' ] 				= self._config.get( 'Reddit', 'password' )
 		self._reddit[ 'minimum_comment_score' ] = self._config.getint( 'Reddit', 'minimum_comment_score' )
