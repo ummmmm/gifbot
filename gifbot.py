@@ -50,25 +50,13 @@ class GIFBot:
 		return head + text
 			
 	def post_comment( self, submission, comment ):
-		attempts = 0
+		try:
+			submission.add_comment( comment )
+			self._commented_posts.add( submission.id )
+		except Exception:
+			return False
 
-		while attempts < 5:
-			attempts += 1
-
-			try:
-				submission.add_comment( comment )
-				self._commented_posts.add( submission.id )
-				return True
-			except urllib2.HTTPError:
-				self._banned_subreddits.add( submission.subreddit.display_name )
-				print "Apparently I'm banned from this subreddit :("
-				time.sleep( 5 )
-			except Exception:
-				print 'Apparently something went terrible wrong'
-				return False
-				time.sleep( 5 )
-
-		return False
+		return True
 
 	def is_animated( self, url, domain, path ):
 		if self._gif_cache.has_key( url ):
@@ -168,7 +156,7 @@ class GIFBot:
 			submission 	= self._r.get_submission( submission_id = submission_id, comment_limit = None, comment_sort = 'top' )
 
 			if submission.subreddit.display_name in self._banned_subreddits:
-				print '[NO POST] Banned from subreddit "{0}"' . format( submission.subreddit.display_name )
+				print '[NO POST] Banned from /r/{0}' . format( submission.subreddit.display_name )
 				continue
 
 			if submission.num_comments < self._config._reddit[ 'minimum_comments' ] or submission.num_comments > self._config._reddit[ 'maximum_comments' ]:
@@ -189,11 +177,11 @@ class GIFBot:
 					matches.append( { 'gifs' : gifs, 'author': comment.author.name, 'permalink': comment.permalink, 'score': comment.score } )
 
 			if total < self._config._reddit[ 'minimum_gifs' ]:
-				print "[NO POST] Submission has {0} animated GIFS" . format( total )
+				print "[NO POST] Submission has {0} animated GIFs" . format( total )
 				continue
 
 			if len( authors ) < self._config._reddit[ 'minimum_commenters' ]:
-				print "[NO POST] Submission has only {0} unique commenters" .format( len( authors ) )
+				print "[NO POST] Submission has only {0} unique commenters" . format( len( authors ) )
 				continue
 
 			matches = sorted( matches, key = lambda k: k[ 'score' ], reverse = True )
@@ -202,7 +190,7 @@ class GIFBot:
 			if not self.post_comment( submission, comment ):
 				continue
 
-			print "[POST] Comment has been posted to submission id ", submission_id
+			print '[POST] Comment has been posted to submission "{0}" in /r/{1}' . format( submission.title, submission.subreddit.display_name )
 
 class Config:
 	def __init__( self ):
